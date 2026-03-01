@@ -1,0 +1,21 @@
+{
+  "source": "Reference retail prices (USD per kg for NYC, JPY per kg for Tokyo)",
+  "updated": "2025-02",
+  "cities": {
+    "NYC": {
+      "currency": "USD",
+      "price_per_kg": 1.52,
+      "price_per_lb": 0.69,
+      "unit": "kg",
+      "_sources": "US retail average, FRED/Census reference"
+    },
+    "Tokyo": {
+      "currency": "JPY",
+      "price_per_kg": 218,
+      "price_per_bunch": 198,
+      "unit": "kg",
+      "_sources": "Japan Retail Price Survey (e-stat), typical supermarket"
+    }
+  },
+  "_note": "Prices are reference values. Update periodically for accuracy."
+}

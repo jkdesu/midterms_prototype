@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIDTERMS</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="scene scene-both">
+    <!-- Local images take priority; fallback to placeholders -->
+    <img class="tokyo" id="tokyoImg" src="banana_images/tokyo.png" alt="Tokyo">
+    <div class="tokyo-collage">
+      <img class="collage-sticker tokyo-sticker-10" src="banana_images/10.png" alt="">
+      <img class="collage-sticker tokyo-sticker-100" src="banana_images/100.png" alt="">
+      <img class="collage-sticker tokyo-sticker-1000" src="banana_images/1000.png" alt="">
+      <img class="collage-sticker tokyo-sticker-1" src="banana_images/tokyo1.png" alt="">
+      <img class="collage-sticker tokyo-sticker-2" src="banana_images/tokyo2.png" alt="">
+      <img class="collage-sticker tokyo-sticker-3" src="banana_images/tokyo3.png" alt="">
+      <img class="collage-sticker tokyo-sticker-1111" src="banana_images/1111.png" alt="">
+    </div>
+    <img class="manhattan" id="manhattanImg" src="banana_images/manahttan.jpg" alt="Manhattan">
+    <div class="manhattan-collage">
+      <img class="collage-sticker mh01" src="banana_images/mh01.png" alt="">
+      <img class="collage-sticker mh02" src="banana_images/mh02.png" alt="">
+      <img class="collage-sticker mh03" src="banana_images/mh03.png" alt="">
+      <img class="collage-sticker sticker-1111" src="banana_images/1111.png" alt="">
+      <img class="collage-sticker sticker-tiff" src="banana_images/tiff.png" alt="">
+    </div>
+  </div>
+
+  <header class="page-header">
+    <h1 class="page-title">INTRINSIC VALUE IN EVERYDAY OBJECT</h1>
+    <h2 class="page-subtitle">BANANA POEM GENERATOR</h2>
+  </header>
+
+  <div class="camera-layer">
+    <video id="video" playsinline></video>
+  </div>
+
+  <div class="banana-cutout-layer">
+    <canvas id="bananaCanvas"></canvas>
+    <div class="poem-frame" id="poemFrame">
+      <p class="poem-text" id="poemText"></p>
+    </div>
+  </div>
+
+  <div class="price-chart-bar">
+    <div class="price-chart-wrapper">
+      <canvas id="priceChart"></canvas>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

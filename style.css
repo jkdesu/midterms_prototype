@@ -1,0 +1,378 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Jost", Futura, "Century Gothic", sans-serif;
+  overflow: hidden;
+  background: #0a0a0b;
+}
+/* Arrow nav at top */
+.arrows-top {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+/* Page header — at top, not affected by MediaPipe */
+.page-header {
+  position: fixed;
+  top: 16px;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding: 12px 20px;
+  text-align: center;
+}
+.page-title {
+  margin: 0;
+  font-family: "Jost", Futura, "Century Gothic", sans-serif;
+  font-size: clamp(36px, 9vw, 63px);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-shadow:
+    -6px -6px 0 #c00, 6px -6px 0 #c00, -6px 6px 0 #c00, 6px 6px 0 #c00,
+    0 -6px 0 #c00, 0 6px 0 #c00, -6px 0 0 #c00, 6px 0 0 #c00,
+    -5px -5px 0 #c00, 5px -5px 0 #c00, -5px 5px 0 #c00, 5px 5px 0 #c00,
+    0 -5px 0 #c00, 0 5px 0 #c00, -5px 0 0 #c00, 5px 0 0 #c00,
+    -4px -4px 0 #c00, 4px -4px 0 #c00, -4px 4px 0 #c00, 4px 4px 0 #c00,
+    0 -4px 0 #c00, 0 4px 0 #c00, -4px 0 0 #c00, 4px 0 0 #c00,
+    -3px -3px 0 #c00, 3px -3px 0 #c00, -3px 3px 0 #c00, 3px 3px 0 #c00,
+    0 -3px 0 #c00, 0 3px 0 #c00, -3px 0 0 #c00, 3px 0 0 #c00,
+    -2px -2px 0 #c00, 2px -2px 0 #c00, -2px 2px 0 #c00, 2px 2px 0 #c00,
+    0 -2px 0 #c00, 0 2px 0 #c00, -2px 0 0 #c00, 2px 0 0 #c00,
+    -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+    0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000, 1px 0 0 #000;
+}
+.page-subtitle {
+  margin: 8px 0 0;
+  font-family: "Jost", Futura, "Century Gothic", sans-serif;
+  font-size: clamp(16px, 3.5vw, 28px);
+  font-weight: 400;
+  color: #ffcc00;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-shadow:
+    -5px -5px 0 #c00, 5px -5px 0 #c00, -5px 5px 0 #c00, 5px 5px 0 #c00,
+    0 -5px 0 #c00, 0 5px 0 #c00, -5px 0 0 #c00, 5px 0 0 #c00,
+    -4px -4px 0 #c00, 4px -4px 0 #c00, -4px 4px 0 #c00, 4px 4px 0 #c00,
+    0 -4px 0 #c00, 0 4px 0 #c00, -4px 0 0 #c00, 4px 0 0 #c00,
+    -3px -3px 0 #c00, 3px -3px 0 #c00, -3px 3px 0 #c00, 3px 3px 0 #c00,
+    0 -3px 0 #c00, 0 3px 0 #c00, -3px 0 0 #c00, 3px 0 0 #c00,
+    -2px -2px 0 #c00, 2px -2px 0 #c00, -2px 2px 0 #c00, 2px 2px 0 #c00,
+    0 -2px 0 #c00, 0 2px 0 #c00, -2px 0 0 #c00, 2px 0 0 #c00,
+    -1px -1px 0 #c00, 1px -1px 0 #c00, -1px 1px 0 #c00, 1px 1px 0 #c00,
+    0 -1px 0 #c00, 0 1px 0 #c00, -1px 0 0 #c00, 1px 0 0 #c00;
+}
+/* Layered: camera behind, scene on top, banana cutout on top */
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+}
+.scene img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.4s ease-out;
+}
+.scene .tokyo { z-index: 1; }
+.scene .manhattan { z-index: 2; }
+
+/* Base: overlay of both images */
+.scene.scene-both .tokyo { opacity: 1; }
+.scene.scene-both .manhattan { opacity: 0.5; }
+
+/* Body on left: Tokyo only */
+.scene.scene-tokyo .tokyo { opacity: 1; }
+.scene.scene-tokyo .manhattan { opacity: 0; }
+
+/* Body on right: Manhattan only */
+.scene.scene-manhattan .tokyo { opacity: 0; }
+.scene.scene-manhattan .manhattan { opacity: 1; }
+
+/* Manhattan collage stickers — laptop sticker style */
+.manhattan-collage {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.scene.scene-tokyo .manhattan-collage { opacity: 0; }
+.scene.scene-both .manhattan-collage,
+.scene.scene-manhattan .manhattan-collage { opacity: 1; }
+
+/* Tokyo collage stickers */
+.tokyo-collage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.scene.scene-manhattan .tokyo-collage { opacity: 0; }
+.scene.scene-tokyo .tokyo-collage,
+.scene.scene-both .tokyo-collage { opacity: 1; }
+.tokyo-collage .collage-sticker {
+  position: absolute;
+  opacity: 0.75;
+  width: clamp(480px, 72vw, 840px);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.5);
+}
+.tokyo-collage .tokyo-sticker-10 {
+  top: 20%;
+  left: 15%;
+  transform: rotate(-6deg);
+}
+.tokyo-collage .tokyo-sticker-100 {
+  top: 55%;
+  right: 15%;
+  left: auto;
+  transform: rotate(5deg);
+  z-index: 10;
+  opacity: 0.3;
+}
+.tokyo-collage .tokyo-sticker-1111 {
+  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: none;
+  z-index: 100;
+  opacity: 0.3;
+}
+.tokyo-collage .tokyo-sticker-1000 {
+  bottom: 25%;
+  left: 20%;
+  top: auto;
+  transform: rotate(-4deg);
+  opacity: 0.7;
+}
+.tokyo-collage .tokyo-sticker-1 {
+  top: 10%;
+  right: 20%;
+  left: auto;
+  transform: rotate(8deg);
+  width: clamp(640px, 96vw, 1120px);
+  opacity: 0.3;
+}
+.tokyo-collage .tokyo-sticker-2 {
+  top: 45%;
+  left: 8%;
+  transform: rotate(-7deg);
+  width: clamp(640px, 96vw, 1120px);
+  opacity: 0.3;
+}
+.tokyo-collage .tokyo-sticker-3 {
+  bottom: 15%;
+  right: 25%;
+  top: auto;
+  left: auto;
+  transform: rotate(4deg);
+  width: clamp(640px, 96vw, 1120px);
+  opacity: 0.3;
+}
+.collage-sticker {
+  position: absolute;
+  opacity: 0.3;
+  width: clamp(45px, 6vw, 75px);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 1px 2px 8px rgba(0,0,0,0.35);
+}
+.collage-sticker.mh01 {
+  top: 18%;
+  left: 12%;
+  transform: rotate(-8deg);
+}
+.collage-sticker.mh02 {
+  top: 62%;
+  right: 18%;
+  left: auto;
+  transform: rotate(6deg);
+}
+.collage-sticker.mh03 {
+  bottom: 22%;
+  left: 8%;
+  top: auto;
+  transform: rotate(-4deg);
+}
+.collage-sticker.sticker-1111 {
+  top: 35%;
+  right: 12%;
+  left: auto;
+  opacity: 0.5;
+  transform: rotate(5deg);
+}
+.collage-sticker.sticker-tiff {
+  bottom: 35%;
+  left: 15%;
+  top: auto;
+  opacity: 0.7;
+  transform: rotate(-6deg);
+}
+
+.arrow-btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.arrow-btn:hover {
+  opacity: 0.8;
+}
+.city-label {
+  font-family: "Jost", Futura, "Century Gothic", sans-serif;
+  font-size: 16px;
+}
+.city-tokyo {
+  color: #e63946;
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+}
+.city-manhattan {
+  color: #98ff98;
+  text-shadow: -1px -1px 0 #0066ff, 1px -1px 0 #0066ff, -1px 1px 0 #0066ff, 1px 1px 0 #0066ff;
+}
+.city-sep {
+  color: #fff;
+}
+
+/* Camera — behind scene, hidden */
+.camera-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.camera-layer video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  position: absolute;
+}
+
+/* Banana cutout — only banana visible, on top of scene */
+.banana-cutout-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.banana-cutout-layer canvas {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Poem overlay — fits within video frame */
+.poem-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 90vw;
+  padding: 24px 32px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+.poem-frame.visible {
+  display: flex;
+}
+.poem-text {
+  font-family: "Jost", Futura, "Century Gothic", sans-serif;
+  font-weight: 400;
+  font-size: clamp(36px, 9vw, 63px);
+  line-height: 1.3;
+  transition: font-size 0.2s ease-out;
+  max-width: 95vw;
+  text-align: center;
+  color: #8B4513;
+  text-shadow:
+    0 0 12px rgba(139,69,19,0.9),
+    0 0 24px rgba(139,69,19,0.6),
+    -3px -3px 0 #DAA520, 3px -3px 0 #DAA520, -3px 3px 0 #DAA520, 3px 3px 0 #DAA520,
+    0 -3px 0 #DAA520, 0 3px 0 #DAA520, -3px 0 0 #DAA520, 3px 0 0 #DAA520,
+    -2px -2px 0 #DAA520, 2px -2px 0 #DAA520, -2px 2px 0 #DAA520, 2px 2px 0 #DAA520,
+    0 -2px 0 #DAA520, 0 2px 0 #DAA520, -2px 0 0 #DAA520, 2px 0 0 #DAA520,
+    1px 1px 0 #DAA520, -1px -1px 0 #DAA520, 1px -1px 0 #DAA520, -1px 1px 0 #DAA520,
+    0 0 6px #DAA520;
+  letter-spacing: 0.02em;
+}
+
+/* UI */
+.ui {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 16px;
+  padding: 12px 20px;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  align-items: center;
+  font-size: 14px;
+  color: #fff;
+}
+.badge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.badge.tokyo { background: #e63946; }
+.badge.manhattan { background: #457b9d; }
+.badge.banana { background: #f4a261; color: #1d1d1f; }
+
+.status { color: rgba(255,255,255,0.7); }
+
+/* Price chart — horizontal bar at bottom */
+.price-chart-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  z-index: 8;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(12px);
+  padding: 12px 20px;
+  pointer-events: none;
+}
+.price-chart-wrapper {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+}

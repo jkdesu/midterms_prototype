@@ -1,0 +1,287 @@
+const video = document.getElementById('video');
+const bananaCanvas = document.getElementById('bananaCanvas');
+const bananaCtx = bananaCanvas.getContext('2d');
+const tokyoImg = document.getElementById('tokyoImg');
+const manhattanImg = document.getElementById('manhattanImg');
+const cityBadge = document.getElementById('cityBadge');
+const statusEl = document.getElementById('status');
+const bananaBadge = document.getElementById('bananaBadge');
+let objectDetector = null;
+let lastObjectResult = null;
+let currentScene = 'both';
+let poemWords = [];
+let wasBananaVisible = false;
+
+const audioTokyo = new Audio('mp3_data/grateful.mp3');
+const audioManhattan = new Audio('mp3_data/true.mp3');
+
+// MediaPipe WASM + model paths (CDN)
+const WASM_PATH = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm';
+const OBJECT_MODEL = 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite';
+
+// COCO labels (index → name) — efficientdet_lite0 uses COCO
+const COCO_LABELS = [
+  'background','person','bicycle','car','motorcycle','airplane','bus','train','truck','boat',
+  'traffic light','fire hydrant','stop sign','parking meter','bench','bird','cat','dog','horse','sheep',
+  'cow','elephant','bear','zebra','giraffe','backpack','umbrella','handbag','tie','suitcase',
+  'frisbee','skis','snowboard','sports ball','kite','baseball bat','baseball glove','skateboard','surfboard','tennis racket',
+  'bottle','wine glass','cup','fork','knife','spoon','bowl','banana','apple','sandwich',
+  'orange','broccoli','carrot','hot dog','pizza','donut','cake','chair','couch','potted plant',
+  'bed','dining table','toilet','tv','laptop','mouse','remote','keyboard','cell phone','microwave',
+  'oven','toaster','sink','refrigerator','book','clock','vase','scissors','teddy bear','hair drier','toothbrush'
+];
+
+async function init() {
+  if (statusEl) statusEl.textContent = 'Starting camera…';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    video.srcObject = stream;
+    await video.play();
+
+    const { ObjectDetector, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.js');
+    const vision = await FilesetResolver.forVisionTasks(WASM_PATH);
+    objectDetector = await ObjectDetector.createFromModelPath(vision, OBJECT_MODEL);
+    objectDetector.setOptions({
+      runningMode: 'VIDEO',
+      maxResults: 10,
+      scoreThreshold: 0.25,
+    });
+
+    const txt = await fetch('data/extrinsic_value.txt').then(r => r.text()).catch(() => '');
+    poemWords = extractWords(txt);
+
+    if (statusEl) statusEl.textContent = '← Tokyo | → Manhattan | ↑ both';
+    setupArrowKeys();
+    resize();
+    window.addEventListener('resize', resize);
+    detectLoop();
+  } catch (e) {
+    if (statusEl) statusEl.textContent = 'Error: ' + (e.message || e);
+    console.error(e);
+  }
+}
+
+function resize() {
+  const vw = video.videoWidth || 640;
+  const vh = video.videoHeight || 480;
+  bananaCanvas.width = vw;
+  bananaCanvas.height = vh;
+}
+
+function detectLoop() {
+  if (!video.videoWidth) {
+    requestAnimationFrame(detectLoop);
+    return;
+  }
+
+  const ts = performance.now();
+
+  if (objectDetector) {
+    try {
+      lastObjectResult = objectDetector.detectForVideo(video, ts);
+    } catch (_) {}
+  }
+
+  draw();
+  updateBananaBadge();
+  requestAnimationFrame(detectLoop);
+}
+
+function draw() {
+  bananaCtx.clearRect(0, 0, bananaCanvas.width, bananaCanvas.height);
+
+  if (lastObjectResult?.detections?.length) {
+    for (const d of lastObjectResult.detections) {
+      const cat = d.categories?.[0];
+      const name = (cat?.categoryName ?? COCO_LABELS[cat?.index ?? -1] ?? '').toLowerCase();
+      if (name !== 'banana') continue;
+      const box = d.boundingBox;
+      if (!box) continue;
+      const x = box.originX ?? 0;
+      const y = box.originY ?? 0;
+      const w = box.width ?? 0;
+      const h = box.height ?? 0;
+      bananaCtx.drawImage(video, x, y, w, h, x, y, w, h);
+    }
+  }
+}
+
+function setScene(scene) {
+  currentScene = scene;
+  const el = document.querySelector('.scene');
+  el.className = 'scene scene-' + scene;
+  if (cityBadge) {
+    if (scene === 'both') { cityBadge.textContent = 'Tokyo + Manhattan'; cityBadge.className = 'badge tokyo'; }
+    else if (scene === 'tokyo') { cityBadge.textContent = 'Tokyo'; cityBadge.className = 'badge tokyo'; }
+    else { cityBadge.textContent = 'Manhattan'; cityBadge.className = 'badge manhattan'; }
+  }
+  audioTokyo.pause();
+  audioManhattan.pause();
+  audioTokyo.currentTime = 0;
+  audioManhattan.currentTime = 0;
+  if (scene === 'tokyo') audioTokyo.play().catch(() => {});
+  else if (scene === 'manhattan') audioManhattan.play().catch(() => {});
+}
+
+function setupArrowKeys() {
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); setScene('tokyo'); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); setScene('manhattan'); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setScene('both'); }
+  });
+  const arrowLeft = document.getElementById('arrowLeft');
+  const arrowRight = document.getElementById('arrowRight');
+  if (arrowLeft) arrowLeft.addEventListener('click', () => setScene('tokyo'));
+  if (arrowRight) arrowRight.addEventListener('click', () => setScene('manhattan'));
+}
+
+const STOP = new Set('the a an and or but in on at to for of with by from as is was are were be been being have has had do does did will would could should may might must shall can need'.split(' '));
+
+function extractWords(txt) {
+  const words = txt
+    .toLowerCase()
+    .replace(/[^\w\s'-]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !STOP.has(w) && !/^\d+$/.test(w));
+  return [...new Set(words)];
+}
+
+function pick(arr, n) {
+  const out = [];
+  const copy = [...arr];
+  for (let i = 0; i < n && copy.length; i++) {
+    out.push(...copy.splice(Math.floor(Math.random() * copy.length), 1));
+  }
+  return out;
+}
+
+function generatePoem() {
+  if (!poemWords.length) return 'banana — comfort — value — accessibility — stability';
+  const w = () => pick(poemWords, 1)[0];
+  const templates = [
+    () => [`the ${w()} of ${w()}`, `${w()}, ${w()} —`, pick(poemWords, 3).join(' '), `${w()} and ${w()}`, `when ${w()} becomes ${w()}`],
+    () => [`${w()} beneath ${w()}`, pick(poemWords, 2).join(', '), `the ${w()} we forget`, pick(poemWords, 3).join(' '), `${w()} persists`],
+    () => [pick(poemWords, 2).join(' '), `${w()} in the ${w()}`, pick(poemWords, 2).join(', '), `small ${w()}`, `${w()} and ${w()}`],
+    () => [`what ${w()} conceals`, pick(poemWords, 3).join(' '), `${w()} or ${w()}`, pick(poemWords, 2).join(' '), `the ${w()} remains`],
+    () => [pick(poemWords, 2).join(' '), `a ${w()} of ${w()}`, pick(poemWords, 3).join(' '), `${w()} embedded`, pick(poemWords, 2).join(' ')]
+  ];
+  return templates[Math.floor(Math.random() * templates.length)]().join(' — ');
+}
+
+function updateBananaBadge() {
+  let bananaFound = false;
+  let largestBoxArea = 0;
+  if (lastObjectResult?.detections?.length) {
+    for (const d of lastObjectResult.detections) {
+      const cat = d.categories?.[0];
+      const name = (cat?.categoryName ?? COCO_LABELS[cat?.index ?? -1] ?? '').toLowerCase();
+      if (name === 'banana') {
+        bananaFound = true;
+        const box = d.boundingBox;
+        if (box?.width && box?.height) {
+          const area = box.width * box.height;
+          if (area > largestBoxArea) largestBoxArea = area;
+        }
+      }
+    }
+  }
+  if (bananaBadge) bananaBadge.style.display = bananaFound ? 'inline-block' : 'none';
+
+  const frame = document.getElementById('poemFrame');
+  const poemEl = document.getElementById('poemText');
+  if (bananaFound) {
+    frame.classList.add('visible');
+    if (!wasBananaVisible) {
+      poemEl.textContent = generatePoem();
+    }
+    wasBananaVisible = true;
+    // Scale font: bigger when banana closer (larger box), smaller when further
+    const canvasArea = bananaCanvas.width * bananaCanvas.height;
+    const minArea = canvasArea * 0.02;
+    const maxArea = canvasArea * 0.35;
+    const t = Math.max(0, Math.min(1, (largestBoxArea - minArea) / (maxArea - minArea)));
+    const minFont = 20;
+    const maxFont = 96;
+    const fontSize = Math.round(minFont + t * (maxFont - minFont));
+    poemEl.style.fontSize = fontSize + 'px';
+  } else {
+    frame.classList.remove('visible');
+    wasBananaVisible = false;
+    poemEl.style.fontSize = '';
+  }
+}
+
+async function fetchExchangeRates() {
+  const end = new Date();
+  const start = new Date();
+  start.setMonth(start.getMonth() - 3);
+  const startStr = start.toISOString().slice(0, 10);
+  const endStr = end.toISOString().slice(0, 10);
+  const res = await fetch(`https://api.frankfurter.app/${startStr}..${endStr}?from=USD&to=JPY`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+let priceChartInstance = null;
+
+const chartFont = { family: "'Futura', 'Century Gothic', sans-serif", size: 11 };
+
+async function updatePriceChart() {
+  let nycUsd = 1.52, tokyoJpy = 218;
+  try {
+    const bp = await fetch('dataset/banana-prices.json').then(r => r.json()).catch(() => ({}));
+    if (bp.cities?.NYC?.price_per_kg) nycUsd = bp.cities.NYC.price_per_kg;
+    if (bp.cities?.Tokyo?.price_per_kg) tokyoJpy = bp.cities.Tokyo.price_per_kg;
+  } catch (_) {}
+  const rates = await fetchExchangeRates();
+  if (!rates?.rates) return { dates: [], nycJpy: [], tokyoUsd: [] };
+  const dates = Object.keys(rates.rates).sort();
+  const nycJpy = dates.map(d => nycUsd * (rates.rates[d]?.JPY ?? 0));
+  const tokyoUsd = dates.map(d => tokyoJpy / (rates.rates[d]?.JPY || 1));
+  return { dates, nycJpy, tokyoUsd };
+}
+
+async function initPriceChart() {
+  const ctx = document.getElementById('priceChart')?.getContext('2d');
+  if (!ctx) return;
+  if (typeof Chart === 'undefined') return;
+  Chart.defaults.font.family = chartFont.family;
+  Chart.defaults.font.size = chartFont.size;
+  const { dates, nycJpy, tokyoUsd } = await updatePriceChart();
+  if (!dates.length) return;
+  priceChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dates.map(d => d.slice(5)),
+      datasets: [
+        { label: 'NYC (USD→JPY)', data: nycJpy, borderColor: '#e63946', backgroundColor: 'rgba(230,57,70,0.15)', fill: true, tension: 0.2 },
+        { label: 'Tokyo (JPY→USD)', data: tokyoUsd, borderColor: '#98ff98', backgroundColor: 'rgba(152,255,152,0.15)', fill: true, tension: 0.2 },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 800 },
+      plugins: { legend: { labels: { color: '#fff', boxWidth: 12, font: chartFont } } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.6)', maxTicksLimit: 12, font: chartFont } },
+        y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.6)', font: chartFont } },
+      },
+    },
+  });
+  // Refresh chart every 2 minutes with latest rates
+  setInterval(async () => {
+    const next = await updatePriceChart();
+    if (priceChartInstance && next.dates.length) {
+      priceChartInstance.data.labels = next.dates.map(d => d.slice(5));
+      priceChartInstance.data.datasets[0].data = next.nycJpy;
+      priceChartInstance.data.datasets[1].data = next.tokyoUsd;
+      priceChartInstance.update('active');
+    }
+  }, 120000);
+}
+
+video.addEventListener('loadedmetadata', resize);
+setScene('both');
+init();
+initPriceChart().catch(() => {});
