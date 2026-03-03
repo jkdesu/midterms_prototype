@@ -400,8 +400,22 @@ body {
   flex-shrink: 0;
   padding-right: 2em;
 }
-.marquee-red { color: #e63946; }
-.marquee-green { color: #00cc66; }
+.marquee-red {
+  color: #e63946 !important;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+.marquee-green {
+  color: #00cc66 !important;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
 @keyframes marquee-scroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-16.666%); }
