@@ -358,7 +358,7 @@ body {
 
 .status { color: rgba(255,255,255,0.7); }
 
-/* Marquee stack — 4 bars at bottom, each at different speed */
+/* Marquee stack — 3 bars at bottom, each at different speed */
 .marquee-stack {
   position: fixed;
   bottom: 0;
@@ -389,7 +389,6 @@ body {
 .marquee-speed-1 { animation-duration: 18s; }
 .marquee-speed-2 { animation-duration: 28s; }
 .marquee-speed-3 { animation-duration: 22s; }
-.marquee-speed-4 { animation-duration: 25s; }
 .marquee-content {
   font-family: "FURUA Condensed", "Oswald", "Futura Condensed", "Century Gothic", sans-serif;
   font-weight: 600;
@@ -398,9 +397,12 @@ body {
   text-transform: uppercase;
   color: #fff;
   text-shadow: 0 0 10px rgba(0,204,102,0.5);
-  padding-right: 3em;
+  flex-shrink: 0;
+  padding-right: 2em;
 }
+.marquee-red { color: #e63946; }
+.marquee-green { color: #00cc66; }
 @keyframes marquee-scroll {
   0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  100% { transform: translateX(-16.666%); }
 }

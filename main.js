@@ -106,27 +106,29 @@ function draw() {
   }
 }
 
-function getMarqueeText(scene) {
+function getMarqueeUnitHTML(scene) {
   const sep = '  —  ';
-  if (scene === 'tokyo') return Array(3).fill('BANANA FOR $1').join(sep);
-  if (scene === 'manhattan') return Array(3).fill('BANANA FOR $2').join(sep);
-  return Array(3).fill('BANANA FOR $1 AND BANANA FOR $2').join(sep);
+  const red = (t) => `<span class="marquee-red">${t}</span>`;
+  const green = (t) => `<span class="marquee-green">${t}</span>`;
+  let part;
+  if (scene === 'tokyo') part = red('BANANA FOR $1');
+  else if (scene === 'manhattan') part = green('BANANA FOR $2');
+  else part = red('BANANA FOR $1') + ' AND ' + green('BANANA FOR $2');
+  return Array(3).fill(part).join(sep) + '  —  ';
 }
 
 function updateMarquee(scene) {
   const tracks = document.querySelectorAll('.marquee-track');
-  const text = getMarqueeText(scene);
-  const t = text + '  —  ';
+  const unitHTML = getMarqueeUnitHTML(scene);
+  const copies = 6;
   tracks.forEach((track) => {
     track.innerHTML = '';
-    const span1 = document.createElement('span');
-    span1.className = 'marquee-content';
-    span1.textContent = t;
-    const span2 = document.createElement('span');
-    span2.className = 'marquee-content';
-    span2.textContent = t;
-    track.appendChild(span1);
-    track.appendChild(span2);
+    for (let i = 0; i < copies; i++) {
+      const span = document.createElement('span');
+      span.className = 'marquee-content';
+      span.innerHTML = unitHTML;
+      track.appendChild(span);
+    }
   });
 }
 
