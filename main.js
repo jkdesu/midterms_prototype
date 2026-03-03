@@ -106,6 +106,30 @@ function draw() {
   }
 }
 
+function getMarqueeText(scene) {
+  const sep = '  —  ';
+  if (scene === 'tokyo') return Array(3).fill('BANANA FOR $1').join(sep);
+  if (scene === 'manhattan') return Array(3).fill('BANANA FOR $2').join(sep);
+  return Array(3).fill('BANANA FOR $1 AND BANANA FOR $2').join(sep);
+}
+
+function updateMarquee(scene) {
+  const tracks = document.querySelectorAll('.marquee-track');
+  const text = getMarqueeText(scene);
+  const t = text + '  —  ';
+  tracks.forEach((track) => {
+    track.innerHTML = '';
+    const span1 = document.createElement('span');
+    span1.className = 'marquee-content';
+    span1.textContent = t;
+    const span2 = document.createElement('span');
+    span2.className = 'marquee-content';
+    span2.textContent = t;
+    track.appendChild(span1);
+    track.appendChild(span2);
+  });
+}
+
 function setScene(scene) {
   currentScene = scene;
   const el = document.querySelector('.scene');
@@ -115,6 +139,7 @@ function setScene(scene) {
     else if (scene === 'tokyo') { cityBadge.textContent = 'Tokyo'; cityBadge.className = 'badge tokyo'; }
     else { cityBadge.textContent = 'Manhattan'; cityBadge.className = 'badge manhattan'; }
   }
+  updateMarquee(scene);
   audioTokyo.pause();
   audioManhattan.pause();
   audioTokyo.currentTime = 0;
@@ -211,77 +236,6 @@ function updateBananaBadge() {
   }
 }
 
-async function fetchExchangeRates() {
-  const end = new Date();
-  const start = new Date();
-  start.setMonth(start.getMonth() - 3);
-  const startStr = start.toISOString().slice(0, 10);
-  const endStr = end.toISOString().slice(0, 10);
-  const res = await fetch(`https://api.frankfurter.app/${startStr}..${endStr}?from=USD&to=JPY`);
-  if (!res.ok) return null;
-  return res.json();
-}
-
-let priceChartInstance = null;
-
-const chartFont = { family: "'Futura', 'Century Gothic', sans-serif", size: 11 };
-
-async function updatePriceChart() {
-  let nycUsd = 1.52, tokyoJpy = 218;
-  try {
-    const bp = await fetch('dataset/banana-prices.json').then(r => r.json()).catch(() => ({}));
-    if (bp.cities?.NYC?.price_per_kg) nycUsd = bp.cities.NYC.price_per_kg;
-    if (bp.cities?.Tokyo?.price_per_kg) tokyoJpy = bp.cities.Tokyo.price_per_kg;
-  } catch (_) {}
-  const rates = await fetchExchangeRates();
-  if (!rates?.rates) return { dates: [], nycJpy: [], tokyoUsd: [] };
-  const dates = Object.keys(rates.rates).sort();
-  const nycJpy = dates.map(d => nycUsd * (rates.rates[d]?.JPY ?? 0));
-  const tokyoUsd = dates.map(d => tokyoJpy / (rates.rates[d]?.JPY || 1));
-  return { dates, nycJpy, tokyoUsd };
-}
-
-async function initPriceChart() {
-  const ctx = document.getElementById('priceChart')?.getContext('2d');
-  if (!ctx) return;
-  if (typeof Chart === 'undefined') return;
-  Chart.defaults.font.family = chartFont.family;
-  Chart.defaults.font.size = chartFont.size;
-  const { dates, nycJpy, tokyoUsd } = await updatePriceChart();
-  if (!dates.length) return;
-  priceChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: dates.map(d => d.slice(5)),
-      datasets: [
-        { label: 'NYC (USD→JPY)', data: nycJpy, borderColor: '#e63946', backgroundColor: 'rgba(230,57,70,0.15)', fill: true, tension: 0.2 },
-        { label: 'Tokyo (JPY→USD)', data: tokyoUsd, borderColor: '#98ff98', backgroundColor: 'rgba(152,255,152,0.15)', fill: true, tension: 0.2 },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 800 },
-      plugins: { legend: { labels: { color: '#fff', boxWidth: 12, font: chartFont } } },
-      scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.6)', maxTicksLimit: 12, font: chartFont } },
-        y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.6)', font: chartFont } },
-      },
-    },
-  });
-  // Refresh chart every 2 minutes with latest rates
-  setInterval(async () => {
-    const next = await updatePriceChart();
-    if (priceChartInstance && next.dates.length) {
-      priceChartInstance.data.labels = next.dates.map(d => d.slice(5));
-      priceChartInstance.data.datasets[0].data = next.nycJpy;
-      priceChartInstance.data.datasets[1].data = next.tokyoUsd;
-      priceChartInstance.update('active');
-    }
-  }, 120000);
-}
-
 video.addEventListener('loadedmetadata', resize);
 setScene('both');
 init();
-initPriceChart().catch(() => {});

@@ -358,21 +358,49 @@ body {
 
 .status { color: rgba(255,255,255,0.7); }
 
-/* Price chart — horizontal bar at bottom */
-.price-chart-bar {
+/* Marquee stack — 4 bars at bottom, each at different speed */
+.marquee-stack {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 140px;
-  z-index: 8;
-  background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(12px);
-  padding: 12px 20px;
-  pointer-events: none;
+  z-index: 9;
+  display: flex;
+  flex-direction: column-reverse;
 }
-.price-chart-wrapper {
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
+.marquee-bar {
+  height: 48px;
+  background: linear-gradient(135deg, rgba(30,30,50,0.95) 0%, rgba(40,45,35,0.95) 100%);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid rgba(0,204,102,0.6);
+}
+.marquee-bar:last-child {
+  border-top: 2px solid #00cc66;
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+  animation: marquee-scroll linear infinite;
+}
+.marquee-speed-1 { animation-duration: 18s; }
+.marquee-speed-2 { animation-duration: 28s; }
+.marquee-speed-3 { animation-duration: 22s; }
+.marquee-speed-4 { animation-duration: 25s; }
+.marquee-content {
+  font-family: "FURUA Condensed", "Oswald", "Futura Condensed", "Century Gothic", sans-serif;
+  font-weight: 600;
+  font-size: clamp(20px, 4vw, 32px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0,204,102,0.5);
+  padding-right: 3em;
+}
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
