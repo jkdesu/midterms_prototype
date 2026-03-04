@@ -108,8 +108,8 @@ function draw() {
 
 function getMarqueeUnitHTML(scene) {
   const sep = '  —  ';
-  const red = (t) => `<span class="marquee-red">${t}</span>`;
-  const green = (t) => `<span class="marquee-green">${t}</span>`;
+  const red = (t) => `<span style="color:#e63946">${t}</span>`;
+  const green = (t) => `<span style="color:#00cc66">${t}</span>`;
   let part;
   if (scene === 'tokyo') part = red('BANANA FOR $1');
   else if (scene === 'manhattan') part = green('BANANA FOR $2');
@@ -121,11 +121,13 @@ function updateMarquee(scene) {
   const tracks = document.querySelectorAll('.marquee-track');
   const unitHTML = getMarqueeUnitHTML(scene);
   const copies = 6;
+  const baseStyle = 'font-family:\'Oswald\',\'Futura Condensed\',sans-serif;font-weight:600;font-size:clamp(20px,4vw,32px);letter-spacing:0.12em;text-transform:uppercase;color:#fff';
   tracks.forEach((track) => {
     track.innerHTML = '';
     for (let i = 0; i < copies; i++) {
       const span = document.createElement('span');
       span.className = 'marquee-content';
+      span.setAttribute('style', baseStyle + ';flex-shrink:0;padding-right:2em');
       span.innerHTML = unitHTML;
       track.appendChild(span);
     }
